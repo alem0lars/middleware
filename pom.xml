@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <properties>
+    <custom.basicNamespace>it.unibo</custom.basicNamespace>
+    <custom.projectId>middleware</custom.projectId>
+    <custom.projectName>Middleware</custom.projectName>
+    <custom.projectUrl>https://nextreamlabs.atlassian.net/wiki/display/PRJMDW</custom.projectUrl>
+    <custom.projectYear>2012</custom.projectYear>
+    <custom.projectDescription>
+      Middleware for concentrated/distributed systems.
+    </custom.projectDescription>
+    <custom.authorName>Alessandro Molari</custom.authorName>
+    <custom.authorEmail>molari.alessandro@gmail.com</custom.authorEmail>
+    <custom.authorUrl>http://alessandro.people.nextreamlabs.org</custom.authorUrl>
+    <custom.authorTimezone>Europe/Rome</custom.authorTimezone>
+
+    <custom.javaVersion>7</custom.javaVersion>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
+  <groupId>${custom.basicNamespace}</groupId>
+  <artifactId>${custom.projectId}</artifactId>
+  <name>${custom.projectName}</name>
+  <url>${custom.projectUrl}</url>
+  <description>${custom.projectDescription}</description>
+  <inceptionYear>${custom.projectYear}</inceptionYear>
+
+  <developers>
+    <developer>
+      <name>${custom.authorName}</name>
+      <email>${custom.authorEmail}</email>
+      <url>${custom.authorUrl}</url>
+      <timezone>${custom.authorTimezone}</timezone>
+      <roles>
+        <role>Analyst</role>
+        <role>Designer</role>
+        <role>Developer</role>
+        <role>Tester</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <!--<licenses>
+    <license>
+      <name>GNU General Public License, Version 3</name>
+      <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+      <distribution>http://www.gnu.org/licenses/gpl-3.0.txt</distribution>
+      <comments>This is a Free software. Free software is a matter of liberty, not price.
+        To understand the concept, you should think of "free" as in "free speech",
+        not as in "free beer".</comments>
+    </license>
+  </licenses>-->
+
+  <version>0.1</version>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency> <!-- TestNG -->
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>6.5.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <directory>${project.basedir}/out</directory>
+    <outputDirectory>${project.build.directory}/classes</outputDirectory>
+    <finalName>${project.artifactId}-${project.version}</finalName>
+    <testOutputDirectory>${project.build.directory}/test-classes</testOutputDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+
+    <resources>
+      <resource> <!-- Allow the presence of the source resources -->
+        <directory>${project.basedir}/src/main/resources</directory>
+      </resource>
+    </resources>
+    <testResources> <!-- Allow the presence of the test resources -->
+      <testResource>
+        <directory>${project.basedir}/src/test/resources</directory>
+      </testResource>
+    </testResources>
+
+    <plugins>
+
+      <plugin> <!-- Allow to use Java 7 -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.${custom.javaVersion}</source>
+          <target>1.${custom.javaVersion}</target>
+        </configuration>
+      </plugin>
+
+      <plugin> <!-- Allow the creation of the JAR -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+
+      <plugin> <!-- Allow to assembly dependencies in the package -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <!-- <mainClass>....</mainClass> -->
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin> <!-- Plugin for tests -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <inherited>true</inherited>
+        <configuration>
+          <forkMode>once</forkMode>
+          <reportFormat>html</reportFormat>
+          <reportFormat>xml</reportFormat>
+        </configuration>
+      </plugin>
+
+      <plugin> <!-- Source plugin (generate source jar) -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin> <!-- Javadoc plugin (generate javadoc jar) -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.8.1</version>
+        <configuration>
+          <show>public</show>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin> <!-- PlantUML plugin -->
+        <groupId>com.github.jeluard</groupId>
+        <artifactId>maven-plantuml-plugin</artifactId>
+        <version>7940</version>
+        <configuration>
+          <verbose>false</verbose>
+          <format>svg</format>
+          <outputInSourceDirectory>false</outputInSourceDirectory>
+          <outputDirectory>${project.build.directory}/models</outputDirectory>
+          <sourceFiles>
+            <directory>${basedir}</directory>
+            <includes>
+              <include>src/models/**/*.puml</include>
+            </includes>
+          </sourceFiles>
+        </configuration>
+      </plugin>
+
+      <plugin> <!-- Compile the conceptual diagrams -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <executable>${basedir}/src/main/scripts/compile_conceptual_diagrams.rb</executable>
+          <environmentVariables>
+            <OUT_DIR>${project.build.directory}/conceptual_diagrams</OUT_DIR>
+            <SRC_DIR>${basedir}/src/conceptual_diagrams</SRC_DIR>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+
+      <plugin> <!-- Ant tasks -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution> <!-- Setup the output directories -->
+            <id>setupOutputDir</id>
+            <phase>clean</phase>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.build.directory}/models"/>
+                <mkdir dir="${project.build.directory}/conceptual_diagrams"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution> <!-- Prepare the resources for the site -->
+            <id>setupResourcesForSite</id>
+            <phase>pre-site</phase>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.basedir}/src/site/resources/models"/>
+                <mkdir dir="${project.basedir}/src/site/resources/conceptual_diagrams"/>
+                <copy todir="${project.basedir}/src/site/resources/models">
+                  <fileset dir="${project.build.directory}/models"/>
+                </copy>
+                <copy todir="${project.basedir}/src/site/resources/conceptual_diagrams">
+                  <fileset dir="${project.build.directory}/conceptual_diagrams"/>
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <reporting>
+    <outputDirectory>${project.build.directory}/site</outputDirectory>
+
+    <plugins>
+
+      <!--<plugin> &lt;!&ndash; Enable Tests reports &ndash;&gt;-->
+        <!--<groupId>org.codehaus.mojo</groupId>-->
+        <!--<artifactId>surefire-report-maven-plugin</artifactId>-->
+        <!--<inherited>true</inherited>-->
+      <!--</plugin>-->
+
+      <plugin> <!-- Enable JavaDOC reports -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.8.1</version>
+        <configuration>
+          <show>public</show>
+        </configuration>
+      </plugin>
+
+    </plugins>
+
+  </reporting>
+
+</project>

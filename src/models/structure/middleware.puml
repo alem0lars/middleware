@@ -1,0 +1,291 @@
+@startuml
+
+
+page 2x1
+
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor white
+  ArrowColor black
+  BorderColor black
+}
+skinparam stereotypeIBackgroundColor 8FBF83
+skinparam stereotypeCBackgroundColor 5EB8C0
+skinparam stereotypeABackgroundColor F4F39C
+
+title Structure - Middleware
+
+
+interface IObservableEndpoint << interface >>
+class ObservableEndpoint
+interface IObserverEndpoint << interface >>
+interface IToken << interface >>
+interface ITranscoder << interface >>
+enum RemoteConnectorType
+
+IObservableEndpoint <|-- ObservableEndpoint
+
+package receiver <<Rect>> {
+  interface IReceiver << interface >>
+  interface ILocalReceiver << interface >>
+  interface IRemoteReceiver << interface >>
+  abstract class Receiver
+  abstract class LocalReceiver
+  class LocalReceiverTrivial
+  class RemoteReceiver
+
+  IReceiver <|-- ILocalReceiver
+  IReceiver <|-- IRemoteReceiver
+  IReceiver <.. IObserverEndpoint
+  IReceiver <|.. Receiver
+  ILocalReceiver <|.. LocalReceiver
+  ILocalReceiver <|.. LocalReceiverTrivial
+  IRemoteReceiver <|.. RemoteReceiver
+  Receiver <|-- LocalReceiver
+  LocalReceiver <|-- LocalReceiverTrivial
+  Receiver <|-- RemoteReceiver
+  Receiver o-- "0..*\n# pool\n{ordered}" IToken
+  IObserverEndpoint "0..*\n# subscribers" --o Receiver
+  RemoteReceiver o-- "1\n# transcoder\n" ITranscoder
+
+  package "remote receiver implementation" <<Rect>> {
+    interface IRemoteReceiverImplementor << interface >>
+    abstract class RemoteReceiverImplementorProxy
+    abstract class RemoteReceiverImplementor
+
+    RemoteReceiver o-- "1\n# implementor" IRemoteReceiverImplementor
+    IRemoteReceiverImplementor <|.. RemoteReceiverImplementorProxy
+    IRemoteReceiverImplementor <|.. RemoteReceiverImplementor
+    RemoteReceiverImplementorProxy o-- "1\n# receiver" RemoteReceiverImplementor
+
+    package "tcp receiver" <<Rect>> {
+      class ReceiverProxyTcpTrivial
+      class ReceiverTcpActive
+      class ReceiverTcpPassive
+
+      RemoteReceiverImplementorProxy <|-- ReceiverProxyTcpTrivial
+      RemoteReceiverImplementor <|-- ReceiverTcpActive
+      RemoteReceiverImplementor <|-- ReceiverTcpPassive
+    }
+  }
+}
+
+package sender <<Rect>> {
+  interface ISender << interface >>
+  interface ILocalSender << interface >>
+  interface IRemoteSender << interface >>
+  abstract class Sender
+  class LocalSender
+  class RemoteSender
+
+  ISender <|-- ILocalSender
+  ISender <|-- IRemoteSender
+  IObservableEndpoint <.. ISender
+  ISender "0..n\n# channels" --o ObservableEndpoint
+  ISender <|.. Sender
+  ILocalSender <|.. LocalSender
+  IRemoteSender <|.. RemoteSender
+  Sender <|-- RemoteSender
+  Sender <|-- LocalSender
+  LocalSender o-left- "1\n# receiver\n" LocalReceiver
+  RemoteSender o-- "1\n# transcoder" ITranscoder
+
+  package "remote sender implementation" <<Rect>> {
+    interface IRemoteSenderImplementor << interface >>
+    abstract class RemoteSenderImplementorProxy
+    abstract class RemoteSenderImplementor
+
+    RemoteSender o-- "1\n# implementor\n" IRemoteSenderImplementor
+    IRemoteSenderImplementor <|.. RemoteSenderImplementorProxy
+    IRemoteSenderImplementor <|.. RemoteSenderImplementor
+    RemoteSenderImplementorProxy o-- "1\n# sender" RemoteSenderImplementor
+
+    package "tcp sender" <<Rect>> {
+      class SenderProxyTcpTrivial
+      class SenderTcpActive
+      class SenderTcpPassive
+
+      RemoteSenderImplementorProxy <|-- SenderProxyTcpTrivial
+      RemoteSenderImplementor <|-- SenderTcpActive
+      RemoteSenderImplementor <|-- SenderTcpPassive
+    }
+  }
+}
+
+
+interface IObservableEndpoint {
+  + {abstract} addPublisher(ISender) : void
+  + {abstract} deletePublisher(ISender) : void
+  + {abstract} deletePublishers() : void
+  + {abstract} notifyPublishers(IToken) : void
+  + {abstract} countPublishers() : int
+}
+class ObservableEndpoint {
+  - publishers : List<ISender>
+  + ObservableEndpoint()
+  + addPublisher(ISender) : void
+  + deletePublisher(ISender) : void
+  + deletePublishers() : void
+  + notifyPublishers(IToken) : void
+  + countPublishers() : int
+}
+
+interface IObserverEndpoint {
+  + {abstract} update(IReceiver, IToken) : void
+}
+
+interface IToken {
+  + {abstract} getValue() : String
+}
+
+interface ITranscoder {
+  + {abstract} encode(IToken) : String
+  + {abstract} decode(String) : IToken
+}
+
+interface IReceiver {
+  + {abstract} receive() : void
+  + {abstract} getLastToken() : IToken
+  + {abstract} subscribe(IObserverEndpoint) : void
+  + {abstract} deleteSubscriber(IObserverEndpoint) : void
+  + {abstract} notifySubscribers(IToken) : void
+  + {abstract} countSubscribers() : int
+  + {abstract} deleteSubscribers() : void
+}
+abstract class Receiver {
+  + subscribe(IObserverEndpoint) : void
+  + deleteSubscriber(IObserverEndpoint) : void
+  + notifySubscribers(IToken) : void
+  + countSubscribers() : int
+  + deleteSubscribers() : void
+}
+abstract class LocalReceiver {
+  + receive() : void
+  + {abstract} add(IToken) : void
+}
+class LocalReceiverTrivial {
+  + add(IToken) : void
+  + getLastToken() : IToken
+}
+class RemoteReceiver {
+  - receiverThread : Thread
+  + RemoteReceiver(IRemoteReceiverImplementor, ITranscoder)
+  + receive() : void
+  + getLastToken() : IToken
+}
+enum RemoteConnectorType {
+  ACTIVE_CONNECTOR,
+  PASSIVE_CONNECTOR
+}
+interface IRemoteReceiverImplementor {
+  + {abstract} receive() : void
+  + {abstract} getLastTokenData() : String
+  + {abstract} releaseResources() : void
+}
+abstract class RemoteReceiverImplementorProxy {
+  # receiverType : RemoteConnectorType
+  # connectionString : String
+  + RemoteReceiverImplementorProxy(RemoteConnectorType, String)
+  + receive() : void
+  + getLastTokenData() : String
+  + releaseResources() : void
+  # {abstract} createReceiverImplementor() : RemoteReceiverImplementor
+  # {abstract} isReceiveDenied() : boolean
+  # {abstract} applyQosPolicies() : void
+  # {abstract} cleanupReceive() : void
+}
+
+class ReceiverProxyTcpTrivial {
+  + ReceiverProxyTcpTrivial(RemoteConnectorType, String)
+  # RemoteReceiverImplementor createReceiverImplementor()
+  # isReceiveDenied() : boolean
+  # applyQosPolicies() : void
+  # cleanupReceive() : void
+}
+class ReceiverTcpActive {
+  - address : String
+  - port : int
+  - socket : Socket
+  - lastToken : IToken
+  + ReceiverTcpActive(String, int)
+  + receive() : void
+  + getLastTokenData() : String
+  + releaseResources() : void
+}
+class ReceiverTcpPassive {
+  - port : int
+  - lastToken : IToken
+  - connectionSocket : ServerSocket
+  - acceptorThread : Thread
+  - receiversThreads : Set<Thread>
+  - calledReceive : boolean
+  - calledReceiveMutex : Semaphore
+  - waitForReceive : Semaphore
+  + ReceiverTcpPassive(int)
+  + receive() : void
+  + getLastTokenData() : String
+  + releaseResources() : void
+}
+
+interface ISender {
+  + {abstract} publish(IObservableEndpoint, IToken)
+}
+abstract class Sender {
+  + publish(IObservableEndpoint, IToken)
+  # {abstract} send(IToken) : void
+}
+class LocalSender {
+  + LocalSender(ILocalReceiver)
+  # send(IToken) : void
+}
+class RemoteSender {
+  + RemoteSender(IRemoteSenderImplementor, ITranscoder)
+  # send(IToken) : void
+}
+interface IRemoteSenderImplementor {
+  + {abstract} send(IToken) : void
+  + {abstract} releaseResources() : void
+}
+abstract class RemoteSenderImplementorProxy {
+  # senderType : RemoteConnectorType
+  # connectionString : String
+  + RemoteSenderImplementorProxy(RemoteConnectorType, String)
+  + send(String) : void
+  + releaseResources() : void
+  # {abstract} createSenderImplementor() : RemoteSenderImplementor
+  # {abstract} isSendDenied() : boolean
+  # {abstract} applyQosPolicies() : void
+  # {abstract} cleanupSend() : void
+}
+
+class SenderProxyTcpTrivial {
+  + SenderProxyTcpTrivial(RemoteConnectorType, String)
+  # createSenderImplementor() : RemoteSenderImplementor
+  # isSendDenied() : boolean
+  # applyQosPolicies() : void
+  # cleanupSend() : void
+}
+class SenderTcpActive {
+  - address : String
+  - port : int
+  - socket : Socket
+  - writer : DataOutputStream
+  + SenderTcpActive(String, int)
+  + send(String) : void
+  + releaseResources() : void
+}
+class SenderTcpPassive {
+  - port : int
+  - dataQueue : ConcurrentLinkedQueue<String>
+  - sockets : Set<Socket>
+  - connectionSocket : ServerSocket
+  - acceptorThread : Thread
+  - senderThread : Thread
+  - socketsSemaphore : Semaphore
+  + SenderTcpPassive(int)
+  + send(String) : void
+  + releaseResources() : void
+}
+
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+
+skinparam sequenceLifeLineBorderColor black
+skinparam sequenceArrowColor black
+skinparam sequenceActorBorderColor black
+skinparam sequenceLifeLineBorderColor black
+skinparam sequenceParticipantBorderColor black
+skinparam sequenceBoxLineColor black
+
+hide footbox
+
+title Interactions - Sender/Receiver (local)
+
+
+participant "<u>observable : ObservableEndpoint</u>" as ObservableEndpoint
+
+participant "<u>: LocalSender</u>" as LocalSender
+participant "<u>localRec: LocalReceiver</u>" as LocalReceiver
+participant "<u>: ObserverEndpoint</u>" as LocalObserverEndpoint
+
+
+activate ObservableEndpoint
+ObservableEndpoint -> LocalSender                         ++ : publish(observable, token) : void
+  LocalSender -> LocalSender                              ++ : send(token) : void
+    LocalSender -> LocalReceiver                          ++ : add(token) : void
+      LocalReceiver -> LocalObserverEndpoint              ++ : update(localRec, token) : void
+      LocalReceiver <<-- LocalObserverEndpoint            --
+    LocalSender <<-- LocalReceiver                        --
+  LocalSender <<-- LocalSender                            --
+ObservableEndpoint <<-- LocalSender                       --
+deactivate ObservableEndpoint
+
+
+@enduml

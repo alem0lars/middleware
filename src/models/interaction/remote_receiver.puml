@@ -1,0 +1,63 @@
+@startuml
+
+skinparam sequenceLifeLineBorderColor black
+skinparam sequenceArrowColor black
+skinparam sequenceActorBorderColor black
+skinparam sequenceLifeLineBorderColor black
+skinparam sequenceParticipantBorderColor black
+skinparam sequenceBoxLineColor black
+
+hide footbox
+
+title Interactions - Receiver (remote)
+
+
+participant "<u>observerEndpoint: ObserverEndpoint</u>" as ObserverEndpoint
+participant "<u>receiverRemote: RemoteReceiver</u>" as RemReceiver
+participant "<u>: RemoteReceiverImplementorProxy</u>" as RemReceiverImplProxy
+participant "<u>: RemoteReceiverImplementor</u>" as RemReceiverImpl
+
+participant "<u>: ITranscoder</u>" as Transcoder
+
+
+[-> RemReceiver: receive() : void
+activate RemReceiver
+
+loop ! interrupted
+
+  RemReceiver -> RemReceiverImplProxy                 ++ : receive() : void
+    alt !isImplementorStarted
+      RemReceiverImplProxy -> RemReceiverImpl         ** : <<create>>
+      activate RemReceiverImpl
+      RemReceiverImplProxy <<-- RemReceiverImpl       --
+    end
+    alt ! receiveDenied
+      RemReceiverImplProxy -> RemReceiverImplProxy    ++ : applyQosPolicies() : void
+      RemReceiverImplProxy <<-- RemReceiverImplProxy  --
+      RemReceiverImplProxy -> RemReceiverImpl         ++ : receive() : void
+        note over RemReceiverImpl : Waiting for data...
+        RemReceiverImpl <<-]: send(data)
+      RemReceiverImplProxy <<-- RemReceiverImpl       --
+      RemReceiverImplProxy -> RemReceiverImplProxy    ++ : cleanupReceive() : void
+      RemReceiverImplProxy <<-- RemReceiverImplProxy  --
+    end
+  RemReceiver <<-- RemReceiverImplProxy               --
+
+  RemReceiver -> RemReceiverImplProxy                 ++ : tokenData = getLastTokenData()
+    RemReceiverImplProxy -> RemReceiverImpl           ++ : tokenData = getLastTokenData()
+    RemReceiverImplProxy <<-- RemReceiverImpl         --
+  RemReceiver <<-- RemReceiverImplProxy               --
+
+  RemReceiver -> Transcoder                           ++ : token = decode(tokenData)
+  RemReceiver <<-- Transcoder                         --
+
+  RemReceiver -> ObserverEndpoint                     ++ : update(receiverRemote, token) : void
+  RemReceiver <<-- ObserverEndpoint                   --
+
+end
+
+[<<-- RemReceiver
+deactivate RemReceiver
+
+
+@enduml

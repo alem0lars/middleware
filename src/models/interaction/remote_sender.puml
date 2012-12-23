@@ -1,0 +1,51 @@
+@startuml
+
+skinparam sequenceLifeLineBorderColor black
+skinparam sequenceArrowColor black
+skinparam sequenceActorBorderColor black
+skinparam sequenceLifeLineBorderColor black
+skinparam sequenceParticipantBorderColor black
+skinparam sequenceBoxLineColor black
+
+hide footbox
+
+title Interactions - Sender (remote)
+
+
+participant "<u>observableEndpoint : ObservableEndpoint</u>" as ObservableEndpoint
+
+participant "<u>: RemoteSender</u>" as RemSend
+
+participant "<u>: ITranscoder</u>" as Transcoder
+
+participant "<u>: RemoteSenderImplementorProxy</u>" as RemSendImplProxy
+participant "<u>: RemoteSenderImplementor</u>" as RemSendImpl
+
+
+activate ObservableEndpoint
+ObservableEndpoint -> RemSend           ++ : publish(observableEndpoint, token) : void
+  RemSend -> RemSend                    ++ : send(token) : void
+    RemSend -> Transcoder               ++ : tokenData = encode(token)
+    RemSend <<-- Transcoder             --
+    RemSend -> RemSendImplProxy         ++ : send(tokenData) : void
+      alt !isImplementorStarted
+        RemSendImplProxy -> RemSendImpl   ** : <<create>>
+        activate RemSendImpl
+        RemSendImplProxy <<-- RemSendImpl       --
+      end
+      alt ! sendDenied
+        RemSendImplProxy -> RemSendImplProxy    ++ : applyQosPolicies() : void
+        RemSendImplProxy <<-- RemSendImplProxy  --
+        RemSendImplProxy -> RemSendImpl   ++ : send(tokenData)
+          RemSendImpl ->>]                   : send(tokenData)
+        RemSendImplProxy <<-- RemSendImpl --
+        RemSendImplProxy -> RemSendImplProxy    ++ : cleanupReceive() : void
+        RemSendImplProxy <<-- RemSendImplProxy  --
+      end
+    RemSend <<-- RemSendImplProxy       --
+  RemSend <<-- RemSend                  --
+ObservableEndpoint <<-- RemSend         --
+deactivate ObservableEndpoint
+
+
+@enduml
