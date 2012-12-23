@@ -5,38 +5,27 @@
   <modelVersion>4.0.0</modelVersion>
 
   <properties>
-    <custom.basicNamespace>it.unibo</custom.basicNamespace>
-    <custom.projectId>middleware</custom.projectId>
-    <custom.projectName>Middleware</custom.projectName>
-    <custom.projectUrl>https://nextreamlabs.atlassian.net/wiki/display/PRJMDW</custom.projectUrl>
-    <custom.projectYear>2012</custom.projectYear>
-    <custom.projectDescription>
-      Middleware for concentrated/distributed systems.
-    </custom.projectDescription>
-    <custom.authorName>Alessandro Molari</custom.authorName>
-    <custom.authorEmail>molari.alessandro@gmail.com</custom.authorEmail>
-    <custom.authorUrl>http://alessandro.people.nextreamlabs.org</custom.authorUrl>
-    <custom.authorTimezone>Europe/Rome</custom.authorTimezone>
-
-    <custom.javaVersion>7</custom.javaVersion>
+    <github.global.server>github</github.global.server>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
-  <groupId>${custom.basicNamespace}</groupId>
-  <artifactId>${custom.projectId}</artifactId>
-  <name>${custom.projectName}</name>
-  <url>${custom.projectUrl}</url>
-  <description>${custom.projectDescription}</description>
-  <inceptionYear>${custom.projectYear}</inceptionYear>
+  <groupId>org.nextreamlabs</groupId>
+  <artifactId>middleware</artifactId>
+  <name>Middleware</name>
+  <url>https://molarialessandro.info/middleware</url>
+  <description>
+    Middleware to abstract components communications.
+  </description>
+  <inceptionYear>2012</inceptionYear>
 
   <developers>
     <developer>
-      <name>${custom.authorName}</name>
-      <email>${custom.authorEmail}</email>
-      <url>${custom.authorUrl}</url>
-      <timezone>${custom.authorTimezone}</timezone>
+      <name>Alessandro Molari</name>
+      <email>molari.alessandro@gmail.com</email>
+      <url>http://molarialessandro.info</url>
+      <timezone>+1</timezone>
       <roles>
         <role>Analyst</role>
         <role>Designer</role>
@@ -46,7 +35,7 @@
     </developer>
   </developers>
 
-  <!--<licenses>
+  <licenses>
     <license>
       <name>GNU General Public License, Version 3</name>
       <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
@@ -55,7 +44,18 @@
         To understand the concept, you should think of "free" as in "free speech",
         not as in "free beer".</comments>
     </license>
-  </licenses>-->
+  </licenses>
+
+  <issueManagement>
+    <system>Issues @ Nextreamlabs</system>
+    <url>https://github.com/alem0lars/middleware/issues</url>
+  </issueManagement>
+
+  <scm>
+    <connection>scm:git://github.com/alem0lars/middleware.git</connection>
+    <developerConnection>scm:git@github.com:alem0lars/middleware.git</developerConnection>
+    <url>https://github.com/alem0lars/middleware</url>
+  </scm>
 
   <version>0.1</version>
   <packaging>jar</packaging>
@@ -95,8 +95,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.${custom.javaVersion}</source>
-          <target>1.${custom.javaVersion}</target>
+          <source>1.7</source>
+          <target>1.7</target>
         </configuration>
       </plugin>
 
@@ -248,7 +248,45 @@
         </executions>
       </plugin>
 
+      <plugin> <!-- Github - Upload the packages -->
+        <groupId>com.github.github</groupId>
+        <artifactId>downloads-maven-plugin</artifactId>
+        <version>0.6</version>
+        <configuration>
+          <description>${project.version} release of ${project.name}</description>
+          <override>true</override>
+          <includeAttached>true</includeAttached>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>upload</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin> <!-- Github - Upload the site -->
+        <groupId>com.github.github</groupId>
+        <artifactId>site-maven-plugin</artifactId>
+        <version>0.7</version>
+        <configuration>
+          <message>Creating site for ${project.version}</message>
+          <path>${project.artifactId}</path>
+          <merge>true</merge>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>site</goal>
+            </goals>
+            <phase>site</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
+
   </build>
 
   <reporting>
@@ -256,11 +294,11 @@
 
     <plugins>
 
-      <!--<plugin> &lt;!&ndash; Enable Tests reports &ndash;&gt;-->
-        <!--<groupId>org.codehaus.mojo</groupId>-->
-        <!--<artifactId>surefire-report-maven-plugin</artifactId>-->
-        <!--<inherited>true</inherited>-->
-      <!--</plugin>-->
+      <plugin> <!-- Enable Tests reports -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>surefire-report-maven-plugin</artifactId>
+        <inherited>true</inherited>
+      </plugin>
 
       <plugin> <!-- Enable JavaDOC reports -->
         <groupId>org.apache.maven.plugins</groupId>
