@@ -1,0 +1,6 @@
+/out
+/*.iml
+/.idea
+/src/site/resources/**
+/**/*.bkp
+/**/*.bak

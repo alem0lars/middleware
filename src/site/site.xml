@@ -1,0 +1,32 @@
+<project name="Middleware">
+
+  <bannerLeft>
+    <name>Middleware</name>
+  </bannerLeft>
+
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.3.0</version>
+  </skin>
+
+  <custom>
+    <fluidoSkin>
+      <sourceLineNumbersEnabled>true</sourceLineNumbersEnabled>
+      <topBarEnabled>true</topBarEnabled>
+      <navBarStyle>navbar-inverse</navBarStyle>
+    </fluidoSkin>
+  </custom>
+
+  <body>
+
+    <menu name="Informations">
+      <item name="Overview" href="overview.html"/>
+      <item name="Structure" href="structure.html"/>
+      <item name="Interaction" href="interaction.html"/>
+    </menu>
+
+    <menu ref="reports"/>
+
+  </body>
+</project>
